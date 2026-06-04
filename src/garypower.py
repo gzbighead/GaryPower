@@ -89,19 +89,20 @@ def calc_garypower(df):
     # ── conditionA ────────────────────────────────────────────────
     # 今天 days>100，且距上次"days>100"事件超过100天
     condition_a = np.zeros(n, dtype=bool)
-    since       = np.full(n, np.nan)   # 前一天距上次事件的天数（用于核对）
-    last_event  = -9999
+    since       = np.full(n, np.nan)
+    last_event  = None   # None 表示尚未发生过事件
 
     for i in range(n):
         if days[i] > 100:
-            prev_distance = (i - 1) - last_event   # 前一天距上次事件
-            since[i] = prev_distance
-            if prev_distance > 100:
-                condition_a[i] = True
+            if last_event is not None:
+                distance = i - last_event      # 距上次事件过了多少天
+                since[i] = distance
+                if distance > 100:
+                    condition_a[i] = True
             last_event = i
         else:
-            if last_event != -9999:
-                since[i] = (i - 1) - last_event   # 非事件日也记录，方便核对
+            if last_event is not None:
+                since[i] = i - last_event
 
     out = df.copy()
     out["ld"]         = ld
