@@ -89,18 +89,24 @@ def calc_garypower(df):
     # ── conditionA ────────────────────────────────────────────────
     # 今天 days>100，且距上次"days>100"事件超过100天
     condition_a = np.zeros(n, dtype=bool)
-    last_event  = -9999   # 上次事件的 bar index
+    since       = np.full(n, np.nan)   # 前一天距上次事件的天数（用于核对）
+    last_event  = -9999
 
     for i in range(n):
         if days[i] > 100:
-            gap = i - last_event - 1   # 两次事件之间间隔的天数
-            if gap > 100:
+            prev_distance = (i - 1) - last_event   # 前一天距上次事件
+            since[i] = prev_distance
+            if prev_distance > 100:
                 condition_a[i] = True
-            last_event = i             # 无论是否触发，更新上次事件位置
+            last_event = i
+        else:
+            if last_event != -9999:
+                since[i] = (i - 1) - last_event   # 非事件日也记录，方便核对
 
     out = df.copy()
     out["ld"]         = ld
     out["days"]       = days
+    out["since"]      = since
     out["conditionA"] = condition_a
     return out
 
@@ -136,6 +142,7 @@ def scan_ticker(ticker, period="2y"):
         out  = calc_garypower(df)
         last = out.iloc[-1]
         d = last["days"]
+        s = last["since"]
         return {
             "ticker"     : ticker,
             "name"       : TICKER_NAMES.get(ticker, ""),
@@ -143,6 +150,7 @@ def scan_ticker(ticker, period="2y"):
             "close"      : round(float(last["close"]), 4),
             "ld"         : round(float(last["ld"]), 2),
             "days"       : int(d) if not np.isnan(d) else None,
+            "since"      : int(s) if not np.isnan(s) else None,
             "conditionA" : bool(last["conditionA"]),
             "error"      : None,
         }
@@ -164,10 +172,11 @@ def scan_all(period="2y"):
         if r["error"]:
             print(f"[{i:3d}/{total}] {t:<14} ⚠ error: {r['error']}")
         else:
-            days_str = f"{int(r['days']):>5}" if r['days'] is not None else "  N/A"
+            days_str  = f"{int(r['days']):>5}"  if r['days']  is not None else "  N/A"
+            since_str = f"{int(r['since']):>5}" if r['since'] is not None else "  N/A"
             tag = "  🔔 conditionA" if r["conditionA"] else ""
             print(f"[{i:3d}/{total}] {t:<14} {r['name']:<24} "
-                  f"days={days_str}  close={r['close']}{tag}")
+                  f"days={days_str}  since={since_str}  close={r['close']}{tag}")
         results.append(r)
 
     df = pd.DataFrame(results)
