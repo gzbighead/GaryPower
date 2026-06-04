@@ -43,7 +43,6 @@ WATCHLIST = [
     ("002322.SZ", "理工能科"),
     ("000858.SZ", "五粮液"),
     ("600941.SS", "中国移动"),
-
 ]
 
 # name lookup
@@ -191,10 +190,15 @@ def scan_all(period="2y"):
     total   = len(tickers)
     results = []
     for i, t in enumerate(tickers, 1):
-        print(f"[{i:3d}/{total}] {t:<14}", end=" ", flush=True)
         r = scan_ticker(t, period=period)
-        tag = "🔔 conditionA" if r["conditionA"] else ("⚠ error" if r["error"] else "–")
-        print(tag)
+        if r["error"]:
+            print(f"[{i:3d}/{total}] {t:<14} ⚠ error: {r['error']}")
+        else:
+            days_str  = f"{int(r['days']):>5}"  if r['days']  is not None else "  N/A"
+            since_str = f"{int(r['since']):>5}" if r['since'] is not None else "  N/A"
+            tag = "  🔔 conditionA" if r["conditionA"] else ""
+            print(f"[{i:3d}/{total}] {t:<14} {r['name']:<24} "
+                  f"days={days_str}  since={since_str}  close={r['close']}{tag}")
         results.append(r)
 
     df = pd.DataFrame(results)
