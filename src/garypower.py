@@ -625,7 +625,7 @@ def scan_ticker(ticker, period="2y"):
         #print(f"{'-'*80}")
         status_str = "🔥【触发信号】" if cond_a else ""
         print(f": Days={int(d) if not np.isnan(d) else 'NaN'}, "
-              f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
+              f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
         #print(f"{'='*80}\n")
         # ═══════════════════════════════════════════════════════════════
 
