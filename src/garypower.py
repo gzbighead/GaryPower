@@ -122,26 +122,24 @@ def calc_garypower(df):
 
     days_series = pd.Series(days, index=df.index)
 
-    # 5. 🔥 【修复 Since 多 1】精准重现 Pine 的 var 状态机演进
+    # 5. 🔥【完美对齐】放弃指针累加，改用与 Pine 完全一致的绝对坐标相减法
     since_last_gt100 = np.full(n, np.nan)
-    
-    # 用独立变量模拟 Pine 的 var float 历史继承状态
-    current_since = np.nan 
-    
+    last_gt100_bar = np.nan  # 记录触发时真实的绝对位置 idx
+
     for idx in range(n):
-        # 如果前一根存在有效计数，状态机自动随 K 线步进 +1 (Pine var 默认行为)
-        if not np.isnan(current_since):
-            current_since += 1
-            
-        # 如果当天新高天数触发 > 100，强行将【当天】状态复位归 0
+        # 1. 如果当天新高天数 > 100，立刻更新绝对坐标（对应 Pine 的 last_gt100_bar := bar_index）
         if not np.isnan(days[idx]) and days[idx] > 100:
-            current_since = 0.0
-            
-        since_last_gt100[idx] = current_since
+            last_gt100_bar = float(idx)
+        
+        # 2. 如果之前触发过，当天值就是 绝对当前位置 - 绝对触发位置
+        # 触发当天：idx - idx = 0.0
+        # 触发后第一天：(idx+1) - idx = 1.0
+        if not np.isnan(last_gt100_bar):
+            since_last_gt100[idx] = float(idx) - last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
-    # 6. 条件判断
+    # 6. 条件判断 (保持不变)
     condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 返回结果
