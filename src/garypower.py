@@ -53,15 +53,6 @@ TICKER_NAMES = {t: n for t, n in WATCHLIST}
 #  INDICATOR CORE
 # ═══════════════════════════════════════════════════════════════════
 
-def calc_pjj(high, low, close):
-    pjj1 = (high + low + close * 2) / 4
-    pjj = np.empty(len(pjj1))
-    pjj[0] = pjj1.iloc[0]
-    for i in range(1, len(pjj1)):
-        pjj[i] = pjj1.iloc[i] * 0.9 + pjj1.iloc[i - 1] * 0.1
-    return pd.Series(pjj, index=high.index)
-
-
 def calc_garypower(df):
     o, h, l, c, v = df["open"], df["high"], df["low"], df["close"], df["volume"]
 
@@ -70,10 +61,10 @@ def calc_garypower(df):
     pjj = np.empty(len(pjj1))
     pjj[0] = pjj1.iloc[0]
     for i in range(1, len(pjj1)):
-        pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1 # 修复：应该是递归乘以先前算好的 pjj[i-1]
+        pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1
     pjj = pd.Series(pjj, index=df.index)
 
-    # 2. EMA 计算 (为了完全对齐 Pine，这里用显式递归避免 pandas 初始化差异)
+    # 2. 完全对齐 Pine 的 EMA
     def pine_ema(series, period):
         alpha = 2 / (period + 1)
         res = np.empty(len(series))
@@ -85,7 +76,7 @@ def calc_garypower(df):
     jj1 = pine_ema(pjj, 3)
     jj = jj1.shift(1)
 
-    # 3. 流量控制算法 (XVL)
+    # 3. XVL 流量算法
     denom = (h - l) * 2 - (c - o).abs()
     denom = denom.replace(0, np.nan)
     qjj = v / denom
@@ -104,45 +95,56 @@ def calc_garypower(df):
     gs = pine_ema(gjll.fillna(0), 3)
     pw = gp / gs.abs()
 
-    # 4. 🔥 【完美修复】精细对齐 Pine Script 的 ta.highest / toprange 逻辑
+    # 4. 🔥 【修复 SPY 误差】引入 eps 容差，严格模拟 Pine Script 的 ta.highest 边界突破
     src = gp.values
     n = len(src)
     days = np.zeros(n)
     
+    # 浮点数极小容差，防止近几天数值相近时引发的 np.max 错误穿透
+    eps = 1e-9 
+    
     for idx in range(n):
         current_val = src[idx]
         current_days = 0
-        # 向上回溯最多 2048 根
         for i in range(1, min(idx + 1, 2048 + 1)):
-            # 拿到过去 i 根 K 线的最大值 (包含当前根)
-            window_max = np.max(src[idx - i + 1 : idx + 1])
-            if current_val == window_max:
+            # 提取历史窗口（不包含当前根，以便严格比对历史）
+            if i == 1:
+                window_max = current_val
+            else:
+                window_max = np.max(src[idx - i + 1 : idx]) # 仅对比过去的历史根
+            
+            # 如果当前值大于或等于历史最大值（加上微弱容差判定）
+            if current_val >= window_max - eps:
                 current_days = i - 1
             else:
-                break # 一旦当前值不再是该周期内的最高价，立即阻断
+                break
         days[idx] = current_days
 
     days_series = pd.Series(days, index=df.index)
 
-    # 5. 🔥 【完美修复】状态机逻辑及错位对齐
-    bar_index = np.arange(n)
+    # 5. 🔥 【修复 Since 多 1】精准重现 Pine 的 var 状态机演进
     since_last_gt100 = np.full(n, np.nan)
-    last_gt100_bar = np.nan
-
+    
+    # 用独立变量模拟 Pine 的 var float 历史继承状态
+    current_since = np.nan 
+    
     for idx in range(n):
-        # 1. 满足条件更新状态
+        # 如果前一根存在有效计数，状态机自动随 K 线步进 +1 (Pine var 默认行为)
+        if not np.isnan(current_since):
+            current_since += 1
+            
+        # 如果当天新高天数触发 > 100，强行将【当天】状态复位归 0
         if not np.isnan(days[idx]) and days[idx] > 100:
-            last_gt100_bar = bar_index[idx]
-        # 2. 计算距离
-        if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
+            current_since = 0.0
+            
+        since_last_gt100[idx] = current_since
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
-    # 6. 条件判断：days > 100 并且【上一根】距上次新高天数 > 100
+    # 6. 条件判断
     condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
 
-    # 7. 组装输出
+    # 7. 返回结果
     out = df.copy()
     out["gp"] = gp
     out["gs"] = gs
