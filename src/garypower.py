@@ -106,12 +106,13 @@ def calc_garypower(df):
         days[idx] = count
 
     # ── BARSLAST(days>100) → since1 ──────────────────────────────
-    # 向前找第一根 days>100 的bar，距离即since1
+    # 从当天开始往前搜（含当天），当天事件=0，次日=1
+    # 与通达信 BARSLAST 行为一致
     since1 = np.full(n, np.nan)
     for idx in range(n):
-        for j in range(idx - 1, -1, -1):
+        for j in range(idx, -1, -1):      # 包含当天
             if days[j] > 100:
-                since1[idx] = idx - j
+                since1[idx] = idx - j     # 当天=0，次日=1
                 break
 
     # ── 上次新高 ──────────────────────────────────────────────────
