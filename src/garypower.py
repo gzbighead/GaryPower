@@ -175,9 +175,9 @@ def scan_ticker(ticker, period="2y"):
        
         # 打印触发状态
         #print(f"{'-'*80}")
-        status_str = "🔥【触发信号】" if cond_a else "⏳【未触发】"
+        status_str = "🔥【触发信号】" if cond_a else ""
         print(f": Days={int(d) if not np.isnan(d) else 'NaN'}, "
-              f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]} | 状态: {status_str}")
+              f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]} | {status_str}")
         #print(f"{'='*80}\n")
         # ═══════════════════════════════════════════════════════════════
 
@@ -206,10 +206,10 @@ def scan_all(period="2y"):
     total   = len(tickers)
     results = []
     for i, t in enumerate(tickers, 1):
-        print(f"[{i:3d}/{total}] {t:<14}", end=" ", flush=True)
+        print(f"[{i}/{total}] {t}", end=" ", flush=True)
         r = scan_ticker(t, period=period)
         tag = "🔔 conditionA" if r["conditionA"] else ("⚠ error" if r["error"] else "–")
-        print(tag)
+       # print(tag)
         results.append(r)
 
     df = pd.DataFrame(results)
