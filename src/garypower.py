@@ -108,7 +108,7 @@ def calc_garypower(df):
             # 拿到过去 i 根 K 线的最大值 (包含当前根)
             window_max = np.max(src[idx - i + 1 : idx + 1])
             if current_val == window_max:
-                current_days = i
+                current_days = i - 1
             else:
                 break # 一旦当前值不再是该周期内的最高价，立即阻断
         days[idx] = current_days
@@ -126,7 +126,7 @@ def calc_garypower(df):
             last_gt100_bar = bar_index[idx]
         # 2. 计算距离
         if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar + 1
+            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
