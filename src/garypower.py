@@ -126,7 +126,7 @@ def calc_garypower(df):
             last_gt100_bar = bar_index[idx]
         # 2. 计算距离
         if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
+            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar + 1
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
