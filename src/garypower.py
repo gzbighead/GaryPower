@@ -55,9 +55,9 @@ TICKER_NAMES = {t: n for t, n in WATCHLIST}
 
 def calc_garypower(df):
     """
-    XVL/HSL/力度 按通达信公式；
-    days (TOPRANGE) 按 Pine Script ta.highest 窗口逻辑；
-    since (上次新高) 按通达信正向状态机逻辑。
+    力度 = XVL/20/1.15*0.6
+    days  = 今天力度比过去连续多少天都高（往前数，遇到>=今天的就停）
+    conditionA = days>100 且距上次 days>100 事件超过100天
     """
     o = df["open"].values
     h = df["high"].values
@@ -66,65 +66,42 @@ def calc_garypower(df):
     v = df["volume"].values
     n = len(df)
 
-    # ── QJJ / XVL ────────────────────────────────────────────────
+    # ── 力度 ──────────────────────────────────────────────────────
     denom = (h - l) * 2 - np.abs(c - o)
     denom = np.where(denom == 0, np.nan, denom)
-    qjj = v / denom
+    qjj   = v / denom
+    bull  = c > o
+    bear  = c < o
+    xvl   = np.where(bull, qjj*(h-l),        np.where(bear, qjj*(h-o+c-l),    v/2))           + np.where(bull, -(qjj*(h-c+o-l)), np.where(bear, -(qjj*(h-l)),    -(v/2)))
+    ld    = xvl / 20 / 1.15 * 0.6
 
-    bull = c > o
-    bear = c < o
-    xvl1 = np.where(bull, qjj*(h-l),
-           np.where(bear, qjj*(h-o+(c-l)), v/2))
-    xvl2 = np.where(bull, -(qjj*(h-c+(o-l))),
-           np.where(bear, -(qjj*(h-l)),   -(v/2)))
-    xvl = xvl1 + xvl2
-
-    # ── HSL / 力度 (gp) ───────────────────────────────────────────
-    hsl = pd.Series(xvl, index=df.index) / 20 / 1.15
-    gp  = hsl / 1000 * 600          # 等同于 hsl * 0.6
-
-    # ── TOPRANGE：Pine Script ta.highest 窗口逻辑 ─────────────────
-    # 对每根 bar，找最大的窗口 i 使得 gp[idx] == max(gp[idx-i+1:idx+1])
-    # days = 该 i（一旦不满足立即 break）
-    src = gp.values
+    # ── 力度新高 days ─────────────────────────────────────────────
+    # 往前数，连续多少天力度低于今天（遇到>=今天的就停）
     days = np.zeros(n)
-    for idx in range(n):
-        current_days = 0
-        for i in range(1, min(idx + 1, 2049)):
-            window_max = np.max(src[idx - i + 1: idx + 1])
-            if src[idx] == window_max:
-                current_days = i
-            else:
+    for i in range(1, n):
+        count = 0
+        for j in range(i - 1, -1, -1):
+            if ld[j] >= ld[i]:
                 break
-        days[idx] = current_days
-
-    # ── 上次新高：通达信正向状态机 ───────────────────────────────
-    # 正向遍历记录上次 days>100 的 bar_index，当天即算
-    since_last_gt100 = np.full(n, np.nan)
-    last_gt100_bar   = np.nan
-    for idx in range(n):
-        if days[idx] > 100:
-            last_gt100_bar = idx
-        if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = idx - last_gt100_bar
-
-    # ── 上次新高（错位）：days>100 时取前一根的 since ────────────
-    # 通达信：上次新高 := IF(力度新高>100, REF(上次新高1,1), 上次新高1)
-    since = np.full(n, np.nan)
-    for idx in range(n):
-        if days[idx] > 100:
-            since[idx] = since_last_gt100[idx - 1] if idx > 0 else np.nan
-        else:
-            since[idx] = since_last_gt100[idx]
+            count += 1
+        days[i] = count
 
     # ── conditionA ────────────────────────────────────────────────
-    condition_a = (days > 100) & (~np.isnan(since)) & (since > 100)
+    # 今天 days>100，且距上次"days>100"事件超过100天
+    condition_a = np.zeros(n, dtype=bool)
+    last_event  = -9999   # 上次事件的 bar index
+
+    for i in range(n):
+        if days[i] > 100:
+            gap = i - last_event - 1   # 两次事件之间间隔的天数
+            if gap > 100:
+                condition_a[i] = True
+            last_event = i             # 无论是否触发，更新上次事件位置
 
     out = df.copy()
-    out["ld"]          = gp
-    out["days"]        = days
-    out["since"]       = since
-    out["conditionA"]  = condition_a
+    out["ld"]         = ld
+    out["days"]       = days
+    out["conditionA"] = condition_a
     return out
 
 
@@ -158,18 +135,16 @@ def scan_ticker(ticker, period="2y"):
         df   = fetch_data(ticker, period=period)
         out  = calc_garypower(df)
         last = out.iloc[-1]
-        d    = last["days"]
-        s    = last["since"]
+        d = last["days"]
         return {
-            "ticker"          : ticker,
-            "name"            : TICKER_NAMES.get(ticker, ""),
-            "date"            : out.index[-1].strftime("%Y-%m-%d"),
-            "close"           : round(float(last["close"]), 4),
-            "ld"              : round(float(last["ld"]), 2),
-            "days"            : int(d) if not np.isnan(d) else None,
-            "since"           : int(s) if not np.isnan(s) else None,
-            "conditionA"      : bool(last["conditionA"]),
-            "error"           : None,
+            "ticker"     : ticker,
+            "name"       : TICKER_NAMES.get(ticker, ""),
+            "date"       : out.index[-1].strftime("%Y-%m-%d"),
+            "close"      : round(float(last["close"]), 4),
+            "ld"         : round(float(last["ld"]), 2),
+            "days"       : int(d) if not np.isnan(d) else None,
+            "conditionA" : bool(last["conditionA"]),
+            "error"      : None,
         }
     except Exception as e:
         return {
@@ -189,11 +164,10 @@ def scan_all(period="2y"):
         if r["error"]:
             print(f"[{i:3d}/{total}] {t:<14} ⚠ error: {r['error']}")
         else:
-            days_str  = f"{int(r['days']):>5}"  if r['days']  is not None else "  N/A"
-            since_str = f"{int(r['since']):>5}" if r['since'] is not None else "  N/A"
+            days_str = f"{int(r['days']):>5}" if r['days'] is not None else "  N/A"
             tag = "  🔔 conditionA" if r["conditionA"] else ""
             print(f"[{i:3d}/{total}] {t:<14} {r['name']:<24} "
-                  f"days={days_str}  since={since_str}  close={r['close']}{tag}")
+                  f"days={days_str}  close={r['close']}{tag}")
         results.append(r)
 
     df = pd.DataFrame(results)
@@ -221,7 +195,6 @@ def build_html(signals, scan_date, total_scanned, errors):
               <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#aaa;">{r['name']}</td>
               <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#f0f0f0;text-align:right;">{r['close']}</td>
               <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#4ade80;text-align:right;">{r['days']}</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#60a5fa;text-align:right;">{r['since']}</td>
               <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#fbbf24;text-align:right;">{round(r['ld'],3) if r['ld'] else '–'}</td>
             </tr>"""
         return out
@@ -258,14 +231,13 @@ def build_html(signals, scan_date, total_scanned, errors):
     <div style="padding:28px 32px;">
       {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 conditionA Triggered</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
 
-      {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">力度</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
+      {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">力度</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
 
       <!-- legend -->
       <div style="margin-top:24px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:12px;color:#64748b;line-height:1.8;">
         <strong style="color:#94a3b8;">指标说明</strong><br>
-        <span style="color:#4ade80;">Days</span> — 力度新高持续天数（&gt;100 触发）<br>
-        <span style="color:#60a5fa;">Since</span> — 距上次 Days&gt;100 事件的天数<br>
-        <span style="color:#fbbf24;">力度</span> — HSL × 0.6（净主动买卖量）
+        <span style="color:#4ade80;">Days</span> — 今天力度是过去连续多少天的最高值（&gt;100 触发）<br>
+        <span style="color:#fbbf24;">力度</span> — 净主动买卖量（HSL × 0.6）
       </div>
 
       {error_section}
@@ -334,7 +306,7 @@ def main():
         print(f"  🔔 {len(signals)} conditionA signal(s):")
         for r in signals:
             print(f"     {r['ticker']:<14} {r['name']:<20}  "
-                  f"close={r['close']}  days={r['days']}  since={r['since']}")
+                  f"close={r['close']}  days={r['days']}")
     else:
         print("  No conditionA signals today.")
     if errors:
