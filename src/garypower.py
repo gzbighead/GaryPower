@@ -185,9 +185,9 @@ def scan_ticker(ticker, period="2y"):
         # ═══════════════════════════════════════════════════════════════
         #  【新增】详细日志核对区
         # ═══════════════════════════════════════════════════════════════
-        print(f"\n{"="*80}")
+        print(f"\n{'='*80}")
         print(f"📊 标的核对日志: {ticker} ({TICKER_NAMES.get(ticker, '未知')}) | 数据长度: {len(out)} 根 K 线")
-        print(f"{"-"*80}")
+        print(f"{'-'*80}")
         print("💡 尾部 5 天详细序列数据 (用于对照 TradingView 逐根 K 线):")
         
         # 提取最后 5 天的截面进行对账
@@ -204,11 +204,11 @@ def scan_ticker(ticker, period="2y"):
         print(check_df.to_string())
         
         # 打印触发状态
-        print(f"{"-"*80}")
+        print(f"{'-'*80}")
         status_str = "🔥【触发信号】" if cond_a else "⏳【未触发】"
         print(f"当天结果 ({out.index[-1].strftime('%Y-%m-%d')}): Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]} | 状态: {status_str}")
-        print(f"{"="*80}\n")
+        print(f"{'='*80}\n")
         # ═══════════════════════════════════════════════════════════════
 
         return {
