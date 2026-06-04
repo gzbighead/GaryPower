@@ -61,10 +61,10 @@ def calc_garypower(df):
     pjj = np.empty(len(pjj1))
     pjj[0] = pjj1.iloc[0]
     for i in range(1, len(pjj1)):
-        pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1
+        pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1 # 修复：应该是递归乘以先前算好的 pjj[i-1]
     pjj = pd.Series(pjj, index=df.index)
 
-    # 2. EMA
+    # 2. EMA 计算 (为了完全对齐 Pine，这里用显式递归避免 pandas 初始化差异)
     def pine_ema(series, period):
         alpha = 2 / (period + 1)
         res = np.empty(len(series))
@@ -76,7 +76,7 @@ def calc_garypower(df):
     jj1 = pine_ema(pjj, 3)
     jj = jj1.shift(1)
 
-    # 3. XVL 流量算法
+    # 3. 流量控制算法 (XVL)
     denom = (h - l) * 2 - (c - o).abs()
     denom = denom.replace(0, np.nan)
     qjj = v / denom
@@ -95,59 +95,53 @@ def calc_garypower(df):
     gs = pine_ema(gjll.fillna(0), 3)
     pw = gp / gs.abs()
 
-    # 4. 新高天数判定
+    # 4. 🔥 【完美修复】精细对齐 Pine Script 的 ta.highest / toprange 逻辑
     src = gp.values
     n = len(src)
     days = np.zeros(n)
-    eps = 1e-9 
     
     for idx in range(n):
         current_val = src[idx]
         current_days = 0
+        # 向上回溯最多 2048 根
         for i in range(1, min(idx + 1, 2048 + 1)):
-            if i == 1:
-                window_max = current_val
-            else:
-                window_max = np.max(src[idx - i + 1 : idx])
-            
-            if current_val >= window_max - eps:
+            # 拿到过去 i 根 K 线的最大值 (包含当前根)
+            window_max = np.max(src[idx - i + 1 : idx + 1])
+            if current_val == window_max:
                 current_days = i - 1
             else:
-                break
+                break # 一旦当前值不再是该周期内的最高价，立即阻断
         days[idx] = current_days
 
     days_series = pd.Series(days, index=df.index)
 
-    # 5. 🔥 带有诊断追踪的绝对坐标法
+    # 5. 🔥 【完美修复】状态机逻辑及错位对齐
+    bar_index = np.arange(n)
     since_last_gt100 = np.full(n, np.nan)
-    debug_trigger_idx = np.full(n, np.nan) # 用于追踪到底是在哪一根 K 线判定为新高的
-    last_gt100_bar = np.nan 
+    last_gt100_bar = np.nan
 
     for idx in range(n):
+        # 1. 满足条件更新状态
         if not np.isnan(days[idx]) and days[idx] > 100:
-            last_gt100_bar = float(idx)
-        
+            last_gt100_bar = bar_index[idx]
+        # 2. 计算距离
         if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = float(idx) - last_gt100_bar
-            debug_trigger_idx[idx] = last_gt100_bar
+            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
-    debug_trigger_series = pd.Series(debug_trigger_idx, index=df.index)
 
-    # 6. 条件判断
+    # 6. 条件判断：days > 100 并且【上一根】距上次新高天数 > 100
     condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
 
-    # 7. 返回结果
+    # 7. 组装输出
     out = df.copy()
     out["gp"] = gp
     out["gs"] = gs
     out["pw"] = pw
     out["days"] = days_series
     out["since_last_gt100"] = since_last_gt100_series
-    out["debug_trigger"] = debug_trigger_series # 👈 塞入诊断标签
     out["conditionA"] = condition_a
     return out
-
 # ═══════════════════════════════════════════════════════════════════
 #  DATA FETCH
 # ═══════════════════════════════════════════════════════════════════
@@ -189,17 +183,18 @@ def scan_ticker(ticker, period="2y"):
         # 提取最后 5 天的截面进行对账
         check_df = pd.DataFrame({
             "Close": out["close"],
+            "GP(力度)": out["gp"].round(2),
+            "GS(流量)": out["gs"].round(2),
+            "PW": out["pw"].round(3),
             "Days(新高)": out["days"].astype(int),
-            "Since(距上次)": out["since_last_gt100"],
-            "Since[1](昨距)": out["since_last_gt100"].shift(1),
-            "TriggerIdx(触发坐标)": out["debug_trigger"]
+            "Since(距上次)": out["since_last_gt100"]
         }).tail(5)
         
         # 打印对账表格
         print(check_df.to_string())
         
         # 打印触发状态
-        print(f"{'-'*80}")
+        print(f"{"-"*80}")
         status_str = "🔥【触发信号】" if cond_a else "⏳【未触发】"
         print(f"当天结果 ({out.index[-1].strftime('%Y-%m-%d')}): Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]} | 状态: {status_str}")
