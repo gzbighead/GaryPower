@@ -621,30 +621,7 @@ def scan_ticker(ticker, period="2y"):
         d = last["days"]
         s = last["since_last_gt100"]
         cond_a = last["conditionA"]
-
-"""
-        # ═══════════════════════════════════════════════════════════════
-        #  【新增】详细日志核对区
-        # ═══════════════════════════════════════════════════════════════
-        print(f"\n{'='*80}")
-        print(f"📊 标的核对日志: {ticker} ({TICKER_NAMES.get(ticker, '未知')}) | 数据长度: {len(out)} 根 K 线")
-        print(f"{'-'*80}")
-        print("💡 尾部 5 天详细序列数据 (用于对照 TradingView 逐根 K 线):")
-        
-        # 提取最后 5 天的截面进行对账
-        check_df = pd.DataFrame({
-            "Close": out["close"],
-            "GP(力度)": out["gp"].round(2),
-            "GS(流量)": out["gs"].round(2),
-            "PW": out["pw"].round(3),
-            "Days(新高)": out["days"].astype(int),
-            "Since(距上次)": out["since_last_gt100"]
-        }).tail(5)
-        
-        # 打印对账表格
-        print(check_df.to_string())
-"""
-        
+       
         # 打印触发状态
         print(f"{'-'*80}")
         status_str = "🔥【触发信号】" if cond_a else "⏳【未触发】"
