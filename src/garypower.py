@@ -94,12 +94,13 @@ def calc_garypower(df):
     ld  = hsl * 0.6
 
     # ── TOPRANGE(力度) ────────────────────────────────────────────
-    # 向前找第一根严格大于当前力度的bar，距离即days
+    # 向前找第一根大于等于当前力度的bar，距离即days
+    # 通达信：等值也视为阻断（>=），不继续往前计数
     days = np.zeros(n)
     for idx in range(1, n):
         count = 0
         for j in range(idx - 1, -1, -1):
-            if ld[j] > ld[idx]:
+            if ld[j] >= ld[idx]:
                 break
             count += 1
         days[idx] = count
