@@ -55,16 +55,9 @@ TICKER_NAMES = {t: n for t, n in WATCHLIST}
 
 def calc_garypower(df):
     """
-    严格按通达信公式翻译：
-      QJJ  := VOL / ((H-L)*2 - ABS(C-O))
-      XVL  := IF(C>O, QJJ*(H-L), IF(C<O, QJJ*(H-O+(C-L)), VOL/2))
-             + IF(C>O, 0-QJJ*(H-C+(O-L)), IF(C<O, 0-QJJ*(H-L), 0-VOL/2))
-      HSL  := XVL / 20 / 1.15
-      力度 := HSL * 0.6
-      TOPRANGE(力度)：向前找第一根严格大于当前力度的bar，距离即days
-      BARSLAST(days>100)：向前找第一根days>100的bar，距离即since1
-      上次新高 := IF(days>100, REF(since1,1), since1)
-      conditionA := days>100 AND 上次新高>100
+    XVL/HSL/力度 按通达信公式；
+    days (TOPRANGE) 按 Pine Script ta.highest 窗口逻辑；
+    since (上次新高) 按通达信正向状态机逻辑。
     """
     o = df["open"].values
     h = df["high"].values
@@ -73,62 +66,62 @@ def calc_garypower(df):
     v = df["volume"].values
     n = len(df)
 
-    # ── QJJ ──────────────────────────────────────────────────────
+    # ── QJJ / XVL ────────────────────────────────────────────────
     denom = (h - l) * 2 - np.abs(c - o)
     denom = np.where(denom == 0, np.nan, denom)
     qjj = v / denom
 
-    # ── XVL ──────────────────────────────────────────────────────
     bull = c > o
     bear = c < o
     xvl1 = np.where(bull, qjj*(h-l),
-           np.where(bear, qjj*(h-o+(c-l)),
-                    v/2))
+           np.where(bear, qjj*(h-o+(c-l)), v/2))
     xvl2 = np.where(bull, -(qjj*(h-c+(o-l))),
-           np.where(bear, -(qjj*(h-l)),
-                    -(v/2)))
+           np.where(bear, -(qjj*(h-l)),   -(v/2)))
     xvl = xvl1 + xvl2
 
-    # ── HSL / 力度 ────────────────────────────────────────────────
-    hsl = xvl / 20 / 1.15
-    ld  = hsl * 0.6
+    # ── HSL / 力度 (gp) ───────────────────────────────────────────
+    hsl = pd.Series(xvl, index=df.index) / 20 / 1.15
+    gp  = hsl / 1000 * 600          # 等同于 hsl * 0.6
 
-    # ── TOPRANGE(力度) ────────────────────────────────────────────
-    # 向前找第一根大于等于当前力度的bar，距离即days
-    # 通达信：等值也视为阻断（>=），不继续往前计数
+    # ── TOPRANGE：Pine Script ta.highest 窗口逻辑 ─────────────────
+    # 对每根 bar，找最大的窗口 i 使得 gp[idx] == max(gp[idx-i+1:idx+1])
+    # days = 该 i（一旦不满足立即 break）
+    src = gp.values
     days = np.zeros(n)
-    for idx in range(1, n):
-        count = 0
-        for j in range(idx - 1, -1, -1):
-            if ld[j] >= ld[idx]:
-                break
-            count += 1
-        days[idx] = count
-
-    # ── BARSLAST(days>100) → since1 ──────────────────────────────
-    # 从当天开始往前搜（含当天），当天事件=0，次日=1
-    # 与通达信 BARSLAST 行为一致
-    since1 = np.full(n, np.nan)
     for idx in range(n):
-        for j in range(idx, -1, -1):      # 包含当天
-            if days[j] > 100:
-                since1[idx] = idx - j     # 当天=0，次日=1
+        current_days = 0
+        for i in range(1, min(idx + 1, 2049)):
+            window_max = np.max(src[idx - i + 1: idx + 1])
+            if src[idx] == window_max:
+                current_days = i
+            else:
                 break
+        days[idx] = current_days
 
-    # ── 上次新高 ──────────────────────────────────────────────────
-    # IF(days>100, REF(since1,1), since1)
+    # ── 上次新高：通达信正向状态机 ───────────────────────────────
+    # 正向遍历记录上次 days>100 的 bar_index，当天即算
+    since_last_gt100 = np.full(n, np.nan)
+    last_gt100_bar   = np.nan
+    for idx in range(n):
+        if days[idx] > 100:
+            last_gt100_bar = idx
+        if not np.isnan(last_gt100_bar):
+            since_last_gt100[idx] = idx - last_gt100_bar
+
+    # ── 上次新高（错位）：days>100 时取前一根的 since ────────────
+    # 通达信：上次新高 := IF(力度新高>100, REF(上次新高1,1), 上次新高1)
     since = np.full(n, np.nan)
     for idx in range(n):
         if days[idx] > 100:
-            since[idx] = since1[idx - 1] if idx > 0 else np.nan
+            since[idx] = since_last_gt100[idx - 1] if idx > 0 else np.nan
         else:
-            since[idx] = since1[idx]
+            since[idx] = since_last_gt100[idx]
 
     # ── conditionA ────────────────────────────────────────────────
-    condition_a = (days > 100) & (since > 100)
+    condition_a = (days > 100) & (~np.isnan(since)) & (since > 100)
 
     out = df.copy()
-    out["ld"]          = ld
+    out["ld"]          = gp
     out["days"]        = days
     out["since"]       = since
     out["conditionA"]  = condition_a
