@@ -621,7 +621,8 @@ def scan_ticker(ticker, period="2y"):
         d = last["days"]
         s = last["since_last_gt100"]
         cond_a = last["conditionA"]
-        
+
+        """
         # ═══════════════════════════════════════════════════════════════
         #  【新增】详细日志核对区
         # ═══════════════════════════════════════════════════════════════
@@ -642,6 +643,7 @@ def scan_ticker(ticker, period="2y"):
         
         # 打印对账表格
         print(check_df.to_string())
+        """
         
         # 打印触发状态
         print(f"{'-'*80}")
