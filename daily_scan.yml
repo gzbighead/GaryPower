@@ -1,0 +1,49 @@
+name: GaryPOWER Daily Scan
+
+on:
+  # 每天北京时间 06:00 运行（UTC 22:00 前一天）
+  schedule:
+    - cron: "0 22 * * *"
+
+  # 也可以在 GitHub 页面手动触发
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "Override ticker list (space-separated), leave blank to use default"
+        required: false
+        default: ""
+      period:
+        description: "Data period (e.g. 2y, 1y)"
+        required: false
+        default: "2y"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── 运行扫描 ────────────────────────────────────────────────
+      - name: Run GaryPOWER scan (default tickers)
+        if: github.event.inputs.tickers == '' || github.event_name == 'schedule'
+        run: |
+          python src/garypower.py \
+            AAPL MSFT NVDA TSLA PLTR META AMZN GOOGL \
+            --period ${{ github.event.inputs.period || '2y' }}
+
+      - name: Run GaryPOWER scan (custom tickers)
+        if: github.event.inputs.tickers != ''
+        run: |
+          python src/garypower.py \
+            ${{ github.event.inputs.tickers }} \
+            --period ${{ github.event.inputs.period || '2y' }}
