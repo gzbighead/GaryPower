@@ -8,8 +8,7 @@ Sends HTML email via Resend when signals are found.
 import os
 import sys
 import json
-import urllib.request
-import urllib.error
+import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -727,30 +726,28 @@ def build_html(signals, scan_date, total_scanned, errors):
 
 
 def send_email(api_key, html_body, subject):
-    payload = json.dumps({
-        "from"   : RESEND_FROM,
-        "to"     : [RESEND_TO],
-        "subject": subject,
-        "html"   : html_body,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data    = payload,
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type" : "application/json",
-        },
-        method  = "POST",
-    )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            body = resp.read().decode()
-            print(f"✅ Email sent  →  {RESEND_TO}  (status {resp.status})")
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type" : "application/json",
+                "User-Agent"   : "Mozilla/5.0 (compatible; GaryPOWER/1.0)",
+            },
+            json={
+                "from"   : RESEND_FROM,
+                "to"     : [RESEND_TO],
+                "subject": subject,
+                "html"   : html_body,
+            },
+            timeout=20,
+        )
+        if resp.status_code in (200, 201):
+            print(f"✅ Email sent  →  {RESEND_TO}  (status {resp.status_code})")
             return True
-    except urllib.error.HTTPError as e:
-        print(f"❌ Resend HTTP error {e.code}: {e.read().decode()}")
-        return False
+        else:
+            print(f"❌ Resend error {resp.status_code}: {resp.text}")
+            return False
     except Exception as e:
         print(f"❌ Email send failed: {e}")
         return False
