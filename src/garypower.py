@@ -64,7 +64,7 @@ def calc_garypower(df):
         pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1
     pjj = pd.Series(pjj, index=df.index)
 
-    # 2. 完全对齐 Pine 的 EMA
+    # 2. EMA
     def pine_ema(series, period):
         alpha = 2 / (period + 1)
         res = np.empty(len(series))
@@ -95,25 +95,21 @@ def calc_garypower(df):
     gs = pine_ema(gjll.fillna(0), 3)
     pw = gp / gs.abs()
 
-    # 4. 🔥 【修复 SPY 误差】引入 eps 容差，严格模拟 Pine Script 的 ta.highest 边界突破
+    # 4. 新高天数判定
     src = gp.values
     n = len(src)
     days = np.zeros(n)
-    
-    # 浮点数极小容差，防止近几天数值相近时引发的 np.max 错误穿透
     eps = 1e-9 
     
     for idx in range(n):
         current_val = src[idx]
         current_days = 0
         for i in range(1, min(idx + 1, 2048 + 1)):
-            # 提取历史窗口（不包含当前根，以便严格比对历史）
             if i == 1:
                 window_max = current_val
             else:
-                window_max = np.max(src[idx - i + 1 : idx]) # 仅对比过去的历史根
+                window_max = np.max(src[idx - i + 1 : idx])
             
-            # 如果当前值大于或等于历史最大值（加上微弱容差判定）
             if current_val >= window_max - eps:
                 current_days = i - 1
             else:
@@ -122,24 +118,23 @@ def calc_garypower(df):
 
     days_series = pd.Series(days, index=df.index)
 
-    # 5. 🔥【完美对齐】放弃指针累加，改用与 Pine 完全一致的绝对坐标相减法
+    # 5. 🔥 带有诊断追踪的绝对坐标法
     since_last_gt100 = np.full(n, np.nan)
-    last_gt100_bar = np.nan  # 记录触发时真实的绝对位置 idx
+    debug_trigger_idx = np.full(n, np.nan) # 用于追踪到底是在哪一根 K 线判定为新高的
+    last_gt100_bar = np.nan 
 
     for idx in range(n):
-        # 1. 如果当天新高天数 > 100，立刻更新绝对坐标（对应 Pine 的 last_gt100_bar := bar_index）
         if not np.isnan(days[idx]) and days[idx] > 100:
             last_gt100_bar = float(idx)
         
-        # 2. 如果之前触发过，当天值就是 绝对当前位置 - 绝对触发位置
-        # 触发当天：idx - idx = 0.0
-        # 触发后第一天：(idx+1) - idx = 1.0
         if not np.isnan(last_gt100_bar):
             since_last_gt100[idx] = float(idx) - last_gt100_bar
+            debug_trigger_idx[idx] = last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
+    debug_trigger_series = pd.Series(debug_trigger_idx, index=df.index)
 
-    # 6. 条件判断 (保持不变)
+    # 6. 条件判断
     condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 返回结果
@@ -149,6 +144,7 @@ def calc_garypower(df):
     out["pw"] = pw
     out["days"] = days_series
     out["since_last_gt100"] = since_last_gt100_series
+    out["debug_trigger"] = debug_trigger_series # 👈 塞入诊断标签
     out["conditionA"] = condition_a
     return out
 
@@ -193,11 +189,10 @@ def scan_ticker(ticker, period="2y"):
         # 提取最后 5 天的截面进行对账
         check_df = pd.DataFrame({
             "Close": out["close"],
-            "GP(力度)": out["gp"].round(2),
-            "GS(流量)": out["gs"].round(2),
-            "PW": out["pw"].round(3),
             "Days(新高)": out["days"].astype(int),
-            "Since(距上次)": out["since_last_gt100"]
+            "Since(距上次)": out["since_last_gt100"],
+            "Since[1](昨距)": out["since_last_gt100"].shift(1),
+            "TriggerIdx(触发坐标)": out["debug_trigger"]
         }).tail(5)
         
         # 打印对账表格
