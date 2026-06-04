@@ -174,11 +174,11 @@ def scan_ticker(ticker, period="2y"):
         cond_a = last["conditionA"]
        
         # 打印触发状态
-        //print(f"{'-'*80}")
+        #print(f"{'-'*80}")
         status_str = "🔥【触发信号】" if cond_a else "⏳【未触发】"
         print(f": Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since_Shift1={out['since_last_gt100'].shift(1).iloc[-1]} | 状态: {status_str}")
-        //print(f"{'='*80}\n")
+        #print(f"{'='*80}\n")
         # ═══════════════════════════════════════════════════════════════
 
         return {
