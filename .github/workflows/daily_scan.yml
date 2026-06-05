@@ -3,15 +3,16 @@ name: GaryPOWER Daily Scan
 on:
   # 每天北京时间 07:00 运行（UTC 23:00）
   # 美股收盘后第二天早上拿到完整日线数据
-  schedule:
-    - cron: "30 5,6,7,20 * * Mon-Fri"   # 周一至周五
-
+  # schedule:
+  #  - cron: "30 5,6,7,20 * * Mon-Fri"   # 周一至周五
+  
+  # cloudflare worker 触发 时间 run_repo_b
   repository_dispatch:
     types: [run_repo_b] # 监听 B 事件
   
   # GitHub 页面手动触发
   workflow_dispatch:
-    inputs:
+    inputs:un_repo_b
       period:
         description: "数据周期 (e.g. 2y / 1y / 6mo)"
         required: false
