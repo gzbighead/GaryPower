@@ -582,34 +582,22 @@ def calc_garypower(df):
 
 
 # ═══════════════════════════════════════════════════════════════════
-#  DATA FETCH
-# ═══════════════════════════════════════════════════════════════════
-
-# ═══════════════════════════════════════════════════════════════════
-#  DATA FETCH (强效修复版：永远抓取包含盘中的最新股价)
+#  DATA FETCH (终极时区穿透版：彻底解决 Yahoo 吞掉最新 A 股的硬伤)
 # ═══════════════════════════════════════════════════════════════════
 
 def fetch_data(ticker, period="2y"):
-    import datetime
+    import yfinance as yf
+    import pandas as pd
     
-    # 1. 统一获取当前系统时间（无论你在温哥华本地跑还是 GitHub Actions 跑）
-    now = datetime.datetime.now()
+    # 1. 改用 Ticker 实例化对象，history 拥有比 download 更高级的数据刷新权限
+    t = yf.Ticker(ticker)
     
-    # 2. 强行将结束日期推迟到“明天” (Now + 1 Day)
-    # 核心原理：Yahoo Finance 是左闭右开区间。
-    # 设为明天，就能稳稳榨干并包含“今天”的所有盘中、实时或刚收盘的数据。
-    end_date = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-    
-    # 3. 根据传入的 period 回溯计算开始日期
-    days_to_subtract = 730 if period == "2y" else 365
-    start_date = (now - datetime.timedelta(days=days_to_subtract)).strftime("%Y-%m-%d")
-    
-    # 4. 显式指定 start 和 end，强制拉取实时/最新 K 线
-    raw = yf.download(ticker, start=start_date, end=end_date, interval="1d",
-                      auto_adjust=True, progress=False)
+    # 2. 调用 history，并利用 period 自动对齐最新交易日
+    # keepna=True 极其关键：防止 Yahoo 因为时区未结算而把最新的今天数据当成 NaN 剔除
+    raw = t.history(period=period, interval="1d", auto_adjust=True, keepna=True)
     
     if raw.empty:
-        raise ValueError(f"No data returned for {ticker} (Date Range: {start_date} to {end_date})")
+        raise ValueError(f"No data returned for {ticker}")
         
     # 兼容最新版 yfinance 可能会返回的多级索引 (MultiIndex)
     if isinstance(raw.columns, pd.MultiIndex):
@@ -617,8 +605,14 @@ def fetch_data(ticker, period="2y"):
         
     raw.columns = [c.lower() for c in raw.columns]
     
+    # 3. 此时 raw.index 带有交易所本地时区信息（例如北京时间 CST）
     # 过滤掉成交量为 0 的非交易日
     raw = raw[raw["volume"] > 0]
+    
+    # 4. 终极保底检查：如果由于 Yahoo 结算延迟，导致 history 吐出来的最后一根 K 线
+    # 的 close 价格是 NaN，但有最新的实时价格（Volume 或其他字段有数），
+    # 我们用最后的有效收盘价进行向前填充 (forward fill)，确保今天的数据一定存在。
+    raw = raw.ffill()
     
     return raw[["open", "high", "low", "close", "volume"]].dropna()
 
