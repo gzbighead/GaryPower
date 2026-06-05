@@ -378,4 +378,434 @@ WATCHLIST = [
     ("516650.SS", "有色金属ETF华夏"),
     ("516670.SS", "畜牧养殖ETF招商"),
     ("516700.SS", "大数据ETF华宝"),
-    ("516770
+    ("516770.SS", "游戏ETF华泰柏瑞"),
+    ("516780.SS", "稀土ETF华泰柏瑞"),
+    ("516810.SS", "农业ETF华夏"),
+    ("516820.SS", "医疗创新ETF平安"),
+    ("516850.SS", "新能源ETF华夏"),
+    ("516860.SS", "金融科技ETF博时"),
+    ("516880.SS", "光伏ETF银华"),
+    ("516910.SS", "物流ETF富国"),
+    ("516920.SS", "芯片ETF汇添富"),
+    ("516970.SS", "基建ETF广发"),
+    ("517090.SS", "央企共赢ETF国泰"),
+    ("517380.SS", "创新药ETF天弘"),
+    ("517390.SS", "云计算ETF天弘"),
+    ("517400.SS", "黄金股ETF国泰"),
+    ("517520.SS", "黄金股ETF永赢"),
+    ("517800.SS", "人工智能50ETF方正富邦"),
+    ("517900.SS", "银行AH优选ETF招商"),
+    ("560080.SS", "中药ETF汇添富"),
+    ("560090.SS", "证券ETF汇添富"),
+    ("560170.SS", "央企科技ETF南方"),
+    ("560210.SS", "农牧渔ETF景顺"),
+    ("560270.SS", "电力ETF工银"),
+    ("560280.SS", "工程机械ETF广发"),
+    ("560390.SS", "电网设备ETF易方达"),
+    ("560400.SS", "证券ETF华泰柏瑞"),
+    ("560450.SS", "电力ETF天弘"),
+    ("560470.SS", "有色ETF易方达"),
+    ("560710.SS", "船舶ETF富国"),
+    ("560770.SS", "机器人ETF招商"),
+    ("560780.SS", "半导体设备ETF广发"),
+    ("560800.SS", "数字经济ETF鹏扬"),
+    ("560860.SS", "工业有色ETF万家"),
+    ("560980.SS", "光伏龙头ETF广发"),
+    ("561100.SS", "消费电子ETF富国"),
+    ("561160.SS", "电池ETF富国"),
+    ("561170.SS", "绿色电力ETF富国"),
+    ("561330.SS", "矿业ETF国泰"),
+    ("561380.SS", "电网设备ETF国泰"),
+    ("561560.SS", "电力ETF华泰柏瑞"),
+    ("561580.SS", "央企红利ETF华泰柏瑞"),
+    ("561600.SS", "消费电子ETF平安"),
+    ("561800.SS", "稀有金属ETF华富"),
+    ("561910.SS", "电池ETF招商"),
+    ("562360.SS", "机器人ETF银华"),
+    ("562500.SS", "机器人ETF华夏"),
+    ("562510.SS", "旅游ETF华夏"),
+    ("562550.SS", "绿电ETF华夏"),
+    ("562570.SS", "信创ETF华夏"),
+    ("562590.SZ", "半导体设备ETF华夏"),
+    ("562600.SZ", "医疗器械ETF华夏"),
+    ("562800.SS", "稀有金属ETF嘉实"),
+    ("562820.SZ", "集成电路ETF嘉实"),
+    ("562880.SZ", "电池ETF嘉实"),
+    ("562900.SS", "农业ETF易方达"),
+    ("562930.SZ", "软件ETF易方达"),
+    ("562950.SZ", "消费电子ETF易方达"),
+    ("562960.SS", "绿色电力ETF易方达"),
+    ("562970.SS", "光伏ETF易方达"),
+    ("563020.SS", "红利低波ETF易方达"),
+    ("563210.SS", "专精特新ETF富国"),
+    ("563230.SS", "卫星ETF富国"),
+    ("563320.SS", "通用航空ETF华泰柏瑞"),
+    ("563380.SS", "航空航天ETF华泰柏瑞"),
+    ("563390.SS", "全指现金流ETF华泰柏瑞"),
+    ("563530.SS", "卫星ETF易方达"),
+    ("563560.SS", "科技成长ETF兴业"),
+    ("563790.SS", "卫星ETF鹏华"),
+    ("588000.SS", "科创50ETF华夏"),
+    ("588010.SS", "科创新材料ETF博时"),
+    ("588020.SS", "科创成长ETF易方达"),
+    ("588170.SS", "科创半导体ETF华夏"),
+    ("588200.SS", "科创芯片ETF嘉实"),
+    ("588290.SS", "科创芯片ETF华安"),
+    ("588410.SS", "科创创业人工智能ETF鹏华"),
+    ("588420.SS", "科创创业人工智能ETF摩根"),
+    ("588430.SS", "科创创业人工智能ETF工银"),
+    ("588710.SS", "科创半导体设备ETF华泰柏瑞"),
+    ("588750.SS", "科创芯片ETF汇添富"),
+    ("588760.SS", "科创人工智能ETF广发"),
+    ("588770.SS", "科创信息ETF摩根"),
+    ("588780.SS", "科创芯片设计ETF国联安"),
+    ("588790.SS", "科创AIETF博时"),
+    ("588810.SS", "科创芯片ETF富国"),
+    ("588830.SS", "科创新能源ETF鹏华"),
+    ("588890.SS", "科创芯片ETF南方"),
+    ("588910.SS", "科创价值ETF建信"),
+    ("588920.SS", "科创芯片ETF鹏华"),
+    ("588930.SS", "科创人工智能ETF银华"),
+    ("588960.SS", "科创新能源ETF富国"),
+    ("588990.SS", "科创芯片ETF博时"),
+    ("589010.SS", "科创人工智能ETF华夏"),
+    ("589020.SS", "科创半导体设备ETF鹏华"),
+    ("589030.SS", "科创芯片设计ETF易方达"),
+    ("589070.SS", "科创芯片设计ETF天弘"),
+    ("589090.SS", "科创AIETF鹏华"),
+    ("589100.SS", "科创芯片ETF国泰"),
+    ("589110.SS", "科创人工智能ETF国泰"),
+    ("589120.SS", "科创创新药ETF汇添富"),
+    ("589130.SS", "科创芯片ETF易方达"),
+    ("589139.SS", "科创创业人工智能ETF华泰柏瑞"),
+    ("589142.SS", "科创创业人工智能ETF景顺"),
+    ("589160.SS", "科创芯片ETF广发"),
+    ("589170.SS", "科创芯片设计ETF鹏华"),
+    ("589190.SS", "科创芯片ETF华宝"),
+    ("589210.SS", "科创芯片设计ETF广发"),
+    ("589230.SS", "科创人工智能ETF南方"),
+    ("589250.SS", "科创芯片设计ETF浦银"),
+    ("589260.SS", "科创芯片设计ETF国泰"),
+    ("589380.SS", "科创AIETF富国"),
+    ("589520.SS", "科创人工智能ETF华宝"),
+    ("589560.SS", "科创人工智能ETF汇添富"),
+    ("589720.SS", "科创创新药ETF国泰"),
+    ("589960.SS", "科创新能源ETF易方达"),
+]
+
+# name lookup
+TICKER_NAMES = {t: n for t, n in WATCHLIST}
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  INDICATOR CORE
+# ═══════════════════════════════════════════════════════════════════
+
+def calc_garypower(df):
+    o, h, l, c, v = df["open"], df["high"], df["low"], df["close"], df["volume"]
+
+    # 1. 基础价格与 PJJ 计算
+    # PJJ:=DMA((H + L + C * 2) / 4, 0.9);
+    pjj_input = (h + l + c * 2) / 4
+    pjj = pjj_input.ewm(alpha=0.9, adjust=False).mean()
+
+    # 2. EMA 计算
+    def pine_ema(series, period):
+        alpha = 2 / (period + 1)
+        return series.ewm(alpha=alpha, adjust=False).mean()
+
+    jj1 = pine_ema(pjj, 3)
+    jj = jj1.shift(1)
+
+    # 3. 流量控制算法 (XVL)
+    # QJJ:=VOL / ((H - L) * 2 - ABS(C - O));
+    denom = (h - l) * 2 - (c - o).abs()
+    denom = denom.replace(0, np.nan)  # 规避分母为0导致的极值不稳定
+    qjj = v / denom
+
+    bull = c > o
+    bear = c < o
+
+    xvl1 = np.where(bull, qjj * (h - l), np.where(bear, qjj * (h - o + c - l), v / 2))
+    xvl2 = np.where(bull, -(qjj * (h - c + o - l)), np.where(bear, -(qjj * (h - l)), -(v / 2)))
+    xvl = xvl1 + xvl2
+
+    hsl = pd.Series(xvl, index=df.index) / 20 / 1.15
+    gp = hsl * 0.6  # 力度:HSL*0.6 完美对齐
+
+    gjll = hsl * 0.55 + hsl.shift(1) * 0.33 + hsl.shift(2) * 0.22
+    gs = pine_ema(gjll.fillna(0), 3)
+    pw = gp / gs.abs()
+
+    # 4. 力度新高:TOPRANGE(力度) -> 动态回溯算法
+    src = gp.values
+    n = len(src)
+    days = np.zeros(n)
+    
+    for idx in range(1, n):
+        val = src[idx]
+        count = 0
+        for j in range(idx - 1, -1, -1):
+            if src[j] < val:
+                count += 1
+            else:
+                break
+        days[idx] = count
+
+    days_series = pd.Series(days, index=df.index)
+
+    # 5. 状态机逻辑及错位对齐
+    bar_index = np.arange(n)
+    since_last_gt100 = np.full(n, np.nan)
+    last_gt100_bar = np.nan
+
+    for idx in range(n):
+        if not np.isnan(days[idx]) and days[idx] > 100:
+            last_gt100_bar = bar_index[idx]
+        if not np.isnan(last_gt100_bar):
+            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
+
+    since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
+
+    # 6. 条件判断：days > 100 并且【上一根】距上次新高天数 > 100
+    condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
+
+    # 7. 组装输出
+    out = df.copy()
+    out["gp"] = gp
+    out["gs"] = gs
+    out["pw"] = pw
+    out["days"] = days_series
+    out["since_last_gt100"] = since_last_gt100_series
+    out["conditionA"] = condition_a
+    return out
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  DATA FETCH
+# ═══════════════════════════════════════════════════════════════════
+
+def fetch_data(ticker, period="2y"):
+    # 强制开启 auto_adjust=True，保证高低开收价格是前复权数据，规避除权缺口
+    raw = yf.download(ticker, period=period, interval="1d",
+                      auto_adjust=True, progress=False)
+    if raw.empty:
+        raise ValueError(f"No data returned for {ticker}")
+        
+    # 兼容最新版 yfinance 可能会返回的多级索引 (MultiIndex)
+    if isinstance(raw.columns, pd.MultiIndex):
+        raw.columns = raw.columns.get_level_values(0)
+        
+    raw.columns = [c.lower() for c in raw.columns]
+    
+    # 过滤掉成交量为 0 的非交易日
+    raw = raw[raw["volume"] > 0]
+    
+    return raw[["open", "high", "low", "close", "volume"]].dropna()
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  SCANNER
+# ═══════════════════════════════════════════════════════════════════
+
+def scan_ticker(ticker, period="2y"):
+    try:
+        df = fetch_data(ticker, period=period)
+        out = calc_garypower(df)
+        
+        # 获取最后一根 K 线的数据
+        last = out.iloc[-1]
+        c = last["close"]
+        gp_val = last["gp"]
+        d = last["days"]
+        s = last["since_last_gt100"]
+        cond_a = last["conditionA"]
+       
+        # 打印触发状态 (已增加 Close 和 力度 并在控制台格式化对齐)
+        status_str = "🔥【触发信号】" if cond_a else ""
+        print(f": Close={c:>.2f}, 力度(gp)={gp_val:>.2f}, "
+              f"Days={int(d) if not np.isnan(d) else 'NaN'}, "
+              f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
+
+        return {
+            "ticker"          : ticker,
+            "name"            : TICKER_NAMES.get(ticker, ""),
+            "date"            : out.index[-1].strftime("%Y-%m-%d"),
+            "close"           : round(float(last["close"]), 4),
+            "gp"              : round(float(last["gp"]), 2),
+            "gs"              : round(float(last["gs"]), 2),
+            "pw"              : round(float(last["pw"]), 4),
+            "days"            : int(d) if not np.isnan(d) else None,
+            "since_last_gt100": int(s) if not np.isnan(s) else None,
+            "conditionA"      : bool(cond_a),
+            "error"           : None,
+        }
+    except Exception as e:
+        return {
+            "ticker": ticker, "name": TICKER_NAMES.get(ticker, ""),
+            "date": None, "close": None, "gp": None, "gs": None,
+            "pw": None, "days": None, "since_last_gt100": None,
+            "conditionA": False, "error": str(e),
+        }
+
+def scan_all(period="2y"):
+    tickers = [t for t, _ in WATCHLIST]
+    total   = len(tickers)
+    results = []
+    for i, t in enumerate(tickers, 1):
+        print(f"[{i:>{len(str(total))}}/{total}] {t:<11}", end=" ", flush=True)
+        r = scan_ticker(t, period=period)
+        results.append(r)
+
+    df = pd.DataFrame(results)
+    df = df.sort_values(["conditionA", "days"], ascending=[False, False])
+    return df
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  EMAIL  (Resend)
+# ═══════════════════════════════════════════════════════════════════
+
+RESEND_FROM = "gary@ceic.ca"
+RESEND_TO   = "garyfocus@hotmail.com"
+
+
+def build_html(signals, scan_date, total_scanned, errors):
+    """Build a clean HTML email body."""
+
+    def signal_rows(rows):
+        out = ""
+        for r in rows:
+            out += f"""
+            <tr>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;font-weight:600;color:#f0f0f0;">{r['ticker']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#aaa;">{r['name']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#f0f0f0;text-align:right;">{r['close']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#4ade80;text-align:right;">{r['days']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#60a5fa;text-align:right;">{r['since_last_gt100']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#fbbf24;text-align:right;">{round(r['pw'],3) if r['pw'] else '–'}</td>
+            </tr>"""
+        return out
+
+    error_section = ""
+    if errors:
+        error_section = f"""
+        <p style="margin-top:24px;color:#888;font-size:12px;">
+          ⚠ {len(errors)} ticker(s) failed to load:
+          {', '.join(e['ticker'] for e in errors)}
+        </p>"""
+
+    signal_count = len(signals)
+    subject_note = f"{signal_count} signal(s)" if signal_count else "No signals"
+
+    return f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0d0d0d;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <div style="max-width:680px;margin:32px auto;background:#141414;border-radius:12px;overflow:hidden;border:1px solid #222;">
+
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px 32px;">
+      <div style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">
+        📡 GaryPOWER Signal Report
+      </div>
+      <div style="margin-top:6px;color:#64748b;font-size:13px;">
+        {scan_date} &nbsp;·&nbsp; {total_scanned} tickers scanned &nbsp;·&nbsp; {subject_note}
+      </div>
+    </div>
+
+    <div style="padding:28px 32px;">
+      {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 conditionA Triggered</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
+
+      {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">PW</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
+
+      <div style="margin-top:24px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:12px;color:#64748b;line-height:1.8;">
+        <strong style="color:#94a3b8;">指标说明</strong><br>
+        <span style="color:#4ade80;">Days</span> — 力度新高持续天数（&gt;100 触发）<br>
+        <span style="color:#60a5fa;">Since</span> — 距上次 Days&gt;100 事件的天数（前一根 &gt;100 触发）<br>
+        <span style="color:#fbbf24;">PW</span> — 力度 / |流量|
+      </div>
+
+      {error_section}
+    </div>
+
+    <div style="padding:16px 32px;border-top:1px solid #1e1e1e;text-align:center;font-size:11px;color:#374151;">
+      GaryPOWER · Automated by GitHub Actions
+    </div>
+  </div>
+</body>
+</html>
+""", f"GaryPOWER {scan_date} | {subject_note}"
+
+
+def send_email(api_key, html_body, subject):
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type" : "application/json",
+                "User-Agent"   : "Mozilla/5.0 (compatible; GaryPOWER/1.0)",
+            },
+            json={
+                "from"   : RESEND_FROM,
+                "to"     : [RESEND_TO],
+                "subject": subject,
+                "html"   : html_body,
+            },
+            timeout=20,
+        )
+        if resp.status_code in (200, 201):
+            print(f"✅ Email sent  →  {RESEND_TO}  (status {resp.status_code})")
+            return True
+        else:
+            print(f"❌ Resend error {resp.status_code}: {resp.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Email send failed: {e}")
+        return False
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  MAIN
+# ═══════════════════════════════════════════════════════════════════
+
+def main():
+    api_key = os.environ.get("RESEND_KEY", "")
+    period  = os.environ.get("SCAN_PERIOD", "2y")
+
+    scan_date = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+    print(f"\n{'═'*60}")
+    print(f"   GaryPOWER Scanner  |  {scan_date}")
+    print(f"   Period: {period}  |  Tickers: {len(WATCHLIST)}")
+    print(f"{'═'*60}\n")
+
+    results = scan_all(period=period)
+
+    signals = results[results["conditionA"] == True].to_dict("records")
+    errors  = results[results["error"].notna()].to_dict("records")
+
+    # ── terminal summary ─────────────────────────────────────────
+    print(f"\n{'─'*60}")
+    if signals:
+        print(f"   🔔 {len(signals)} conditionA signal(s):")
+        for r in signals:
+            print(f"     {r['ticker']:<14} {r['name']:<20}  "
+                  f"close={r['close']:<8} gp(力度)={r['gp']:<8} days={r['days']:<5} since={r['since_last_gt100']}")
+    else:
+        print("   No conditionA signals today.")
+    if errors:
+        print(f"\n  ⚠ {len(errors)} error(s): {', '.join(e['ticker'] for e in errors)}")
+    print(f"{'─'*60}\n")
+
+    # ── send email ───────────────────────────────────────────────
+    if not api_key:
+        print("⚠  RESEND_KEY not set — skipping email.")
+        sys.exit(0)
+
+    html, subject = build_html(signals, scan_date, len(WATCHLIST), errors)
+    send_email(api_key, html, subject)
+
+
+if __name__ == "__main__":
+    main()
