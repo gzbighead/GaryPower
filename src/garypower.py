@@ -585,12 +585,31 @@ def calc_garypower(df):
 #  DATA FETCH
 # ═══════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════
+#  DATA FETCH (强效修复版：永远抓取包含盘中的最新股价)
+# ═══════════════════════════════════════════════════════════════════
+
 def fetch_data(ticker, period="2y"):
-    # 强制开启 auto_adjust=True，保证高低开收价格是前复权数据，规避除权缺口
-    raw = yf.download(ticker, period=period, interval="1d",
+    import datetime
+    
+    # 1. 统一获取当前系统时间（无论你在温哥华本地跑还是 GitHub Actions 跑）
+    now = datetime.datetime.now()
+    
+    # 2. 强行将结束日期推迟到“明天” (Now + 1 Day)
+    # 核心原理：Yahoo Finance 是左闭右开区间。
+    # 设为明天，就能稳稳榨干并包含“今天”的所有盘中、实时或刚收盘的数据。
+    end_date = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    # 3. 根据传入的 period 回溯计算开始日期
+    days_to_subtract = 730 if period == "2y" else 365
+    start_date = (now - datetime.timedelta(days=days_to_subtract)).strftime("%Y-%m-%d")
+    
+    # 4. 显式指定 start 和 end，强制拉取实时/最新 K 线
+    raw = yf.download(ticker, start=start_date, end=end_date, interval="1d",
                       auto_adjust=True, progress=False)
+    
     if raw.empty:
-        raise ValueError(f"No data returned for {ticker}")
+        raise ValueError(f"No data returned for {ticker} (Date Range: {start_date} to {end_date})")
         
     # 兼容最新版 yfinance 可能会返回的多级索引 (MultiIndex)
     if isinstance(raw.columns, pd.MultiIndex):
