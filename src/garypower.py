@@ -615,7 +615,7 @@ def fetch_data(ticker, period="2y"):
     
     # 4. 过滤成交量为 0 的日子（但如果是今天且正在交易，Volume 可能暂时为 NaN，要保留）
     # 只有当 Volume 明确存在且等于 0 的非交易日才过滤
-    raw = raw[~(raw["volume"] == 0)]
+    # raw = raw[~(raw["volume"] == 0)]
     
     # 5. 关键修复：不要做任何 round() 强制截断！
     # 很多低价股/美股 ETF 报价在 3 位甚至 4 位小数，这里必须保持原始 float64 精度用于后面指标计算
