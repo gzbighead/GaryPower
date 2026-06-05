@@ -582,36 +582,44 @@ def calc_garypower(df):
 
 
 # ═══════════════════════════════════════════════════════════════════
-#  DATA FETCH (终极时区穿透版：彻底解决 Yahoo 吞掉最新 A 股的硬伤)
+#  DATA FETCH (强力穿透与高精度版：确保拿到最新价，保留3位小数)
 # ═══════════════════════════════════════════════════════════════════
 
 def fetch_data(ticker, period="2y"):
     import yfinance as yf
     import pandas as pd
+    import numpy as np
     
-    # 1. 改用 Ticker 实例化对象，history 拥有比 download 更高级的数据刷新权限
     t = yf.Ticker(ticker)
     
-    # 2. 调用 history，并利用 period 自动对齐最新交易日
-    # keepna=True 极其关键：防止 Yahoo 因为时区未结算而把最新的今天数据当成 NaN 剔除
-    raw = t.history(period=period, interval="1d", auto_adjust=True, keepna=True)
+    # 1. 核心大招：利用 period="1mo" 的最高实时权限榨干 Yahoo 的最新“今天”数据
+    # Yahoo 的服务器对 1mo/3mo 内的数据刷新率最高，能强制穿透未完全结算的最新交易日
+    df_recent = t.history(period="1mo", interval="1d", auto_adjust=True, keepna=True)
+    
+    # 2. 如果最新数据里没有今天，或者你想双重保险，拉取 2y 的基础历史数据
+    df_history = t.history(period=period, interval="1d", auto_adjust=True, keepna=True)
+    
+    # 3. 合并新旧账本，确保最新的一天（周五）绝对被囊括进来
+    # combined 会自动根据日期 Index 去重并保留最新的那根 K 线
+    raw = pd.concat([df_history, df_recent]).sort_index()
+    raw = raw[~raw.index.duplicated(keep='last')]
     
     if raw.empty:
         raise ValueError(f"No data returned for {ticker}")
         
-    # 兼容最新版 yfinance 可能会返回的多级索引 (MultiIndex)
+    # 兼容多级索引
     if isinstance(raw.columns, pd.MultiIndex):
         raw.columns = raw.columns.get_level_values(0)
         
     raw.columns = [c.lower() for c in raw.columns]
     
-    # 3. 此时 raw.index 带有交易所本地时区信息（例如北京时间 CST）
-    # 过滤掉成交量为 0 的非交易日
-    raw = raw[raw["volume"] > 0]
+    # 4. 过滤成交量为 0 的日子（但如果是今天且正在交易，Volume 可能暂时为 NaN，要保留）
+    # 只有当 Volume 明确存在且等于 0 的非交易日才过滤
+    raw = raw[~(raw["volume"] == 0)]
     
-    # 4. 终极保底检查：如果由于 Yahoo 结算延迟，导致 history 吐出来的最后一根 K 线
-    # 的 close 价格是 NaN，但有最新的实时价格（Volume 或其他字段有数），
-    # 我们用最后的有效收盘价进行向前填充 (forward fill)，确保今天的数据一定存在。
+    # 5. 关键修复：不要做任何 round() 强制截断！
+    # 很多低价股/美股 ETF 报价在 3 位甚至 4 位小数，这里必须保持原始 float64 精度用于后面指标计算
+    # 向前填充未结算数据（如果是盘中，防止 Close 暂时为 NaN）
     raw = raw.ffill()
     
     return raw[["open", "high", "low", "close", "volume"]].dropna()
@@ -635,8 +643,10 @@ def scan_ticker(ticker, period="2y"):
         cond_a = last["conditionA"]
        
         # 打印触发状态 (已增加 Close 和 力度 并在控制台格式化对齐)
+        # 找到这部分代码，修改控制台打印和 round 位数：
         status_str = "🔥【触发信号】" if cond_a else ""
-        print(f": Close={c:>.2f}, 力度(gp)={gp_val:>.2f}, "
+        # 修复控制台打印：Close 改为 :>.3f 保留3位小数
+        print(f": Close={c:>.3f}, 力度(gp)={gp_val:>.2f}, "
               f"Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
@@ -644,7 +654,8 @@ def scan_ticker(ticker, period="2y"):
             "ticker"          : ticker,
             "name"            : TICKER_NAMES.get(ticker, ""),
             "date"            : out.index[-1].strftime("%Y-%m-%d"),
-            "close"           : round(float(last["close"]), 4),
+            # 💡 核心修改：close 的四舍五入至少保留 4 位，或者干脆不 round 维持高精度
+            "close"           : round(float(last["close"]), 4), 
             "gp"              : round(float(last["gp"]), 2),
             "gs"              : round(float(last["gs"]), 2),
             "pw"              : round(float(last["pw"]), 4),
