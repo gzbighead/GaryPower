@@ -8,7 +8,7 @@ on:
   
   # cloudflare worker 触发 时间 run_repo_b
   repository_dispatch:
-    types: [run_repo_c] # 监听 B 事件
+    types: [run_repo_b] # 监听 B 事件
     
   # GitHub 页面手动触发
   workflow_dispatch:
