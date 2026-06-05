@@ -504,29 +504,23 @@ TICKER_NAMES = {t: n for t, n in WATCHLIST}
 def calc_garypower(df):
     o, h, l, c, v = df["open"], df["high"], df["low"], df["close"], df["volume"]
 
-    # 1. 基础价格与 pjj 计算
-    pjj1 = (h + l + c * 2) / 4
-    pjj = np.empty(len(pjj1))
-    pjj[0] = pjj1.iloc[0]
-    for i in range(1, len(pjj1)):
-        pjj[i] = pjj1.iloc[i] * 0.9 + pjj[i - 1] * 0.1 # 修复：应该是递归乘以先前算好的 pjj[i-1]
-    pjj = pd.Series(pjj, index=df.index)
+    # 1. 基础价格与 PJJ 计算
+    # PJJ:=DMA((H + L + C * 2) / 4, 0.9);
+    pjj_input = (h + l + c * 2) / 4
+    pjj = pjj_input.ewm(alpha=0.9, adjust=False).mean()
 
-    # 2. EMA 计算 (为了完全对齐 Pine，这里用显式递归避免 pandas 初始化差异)
+    # 2. EMA 计算
     def pine_ema(series, period):
         alpha = 2 / (period + 1)
-        res = np.empty(len(series))
-        res[0] = series.iloc[0]
-        for i in range(1, len(series)):
-            res[i] = series.iloc[i] * alpha + res[i-1] * (1 - alpha)
-        return pd.Series(res, index=series.index)
+        return series.ewm(alpha=alpha, adjust=False).mean()
 
     jj1 = pine_ema(pjj, 3)
     jj = jj1.shift(1)
 
     # 3. 流量控制算法 (XVL)
+    # QJJ:=VOL / ((H - L) * 2 - ABS(C - O));
     denom = (h - l) * 2 - (c - o).abs()
-    denom = denom.replace(0, np.nan)
+    denom = denom.replace(0, np.nan)  # 规避分母为0导致的极值不稳定
     qjj = v / denom
 
     bull = c > o
@@ -537,44 +531,39 @@ def calc_garypower(df):
     xvl = xvl1 + xvl2
 
     hsl = pd.Series(xvl, index=df.index) / 20 / 1.15
-    gp = hsl / 1000 * 600
+    gp = hsl * 0.6  # 力度:HSL*0.6 完美对齐
 
     gjll = hsl * 0.55 + hsl.shift(1) * 0.33 + hsl.shift(2) * 0.22
     gs = pine_ema(gjll.fillna(0), 3)
     pw = gp / gs.abs()
 
-    # 4. 🔥 【完美修复】精细对齐 Pine Script 的 ta.highest / toprange 逻辑
+    # 4. 力度新高:TOPRANGE(力度) -> 动态回溯算法
     src = gp.values
     n = len(src)
     days = np.zeros(n)
     
-    for idx in range(n):
-        current_val = src[idx]
-        current_days = 0
-        # 向上回溯最多 2048 根
-        for i in range(1, min(idx + 1, 2048 + 1)):
-            # 拿到过去 i 根 K 线的最大值 (包含当前根)
-            window_max = np.max(src[idx - i + 1 : idx + 1])
-            if current_val == window_max:
-                current_days = i - 1
+    for idx in range(1, n):
+        val = src[idx]
+        count = 0
+        for j in range(idx - 1, -1, -1):
+            if src[j] < val:
+                count += 1
             else:
-                break # 一旦当前值不再是该周期内的最高价，立即阻断
-        days[idx] = current_days
+                break
+        days[idx] = count
 
     days_series = pd.Series(days, index=df.index)
 
-    # 5. 🔥 【完美修复】状态机逻辑及错位对齐
+    # 5. 状态机逻辑及错位对齐
     bar_index = np.arange(n)
     since_last_gt100 = np.full(n, np.nan)
     last_gt100_bar = np.nan
 
     for idx in range(n):
-        # 1. 满足条件更新状态
         if not np.isnan(days[idx]) and days[idx] > 100:
             last_gt100_bar = bar_index[idx]
-        # 2. 计算距离
         if not np.isnan(last_gt100_bar):
-            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar + 1
+            since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
@@ -590,18 +579,28 @@ def calc_garypower(df):
     out["since_last_gt100"] = since_last_gt100_series
     out["conditionA"] = condition_a
     return out
+
+
 # ═══════════════════════════════════════════════════════════════════
 #  DATA FETCH
 # ═══════════════════════════════════════════════════════════════════
 
 def fetch_data(ticker, period="2y"):
+    # 强制开启 auto_adjust=True，保证高低开收价格是前复权数据，规避除权缺口
     raw = yf.download(ticker, period=period, interval="1d",
                       auto_adjust=True, progress=False)
     if raw.empty:
         raise ValueError(f"No data returned for {ticker}")
+        
+    # 兼容最新版 yfinance 可能会返回的多级索引 (MultiIndex)
     if isinstance(raw.columns, pd.MultiIndex):
         raw.columns = raw.columns.get_level_values(0)
+        
     raw.columns = [c.lower() for c in raw.columns]
+    
+    # 过滤掉成交量为 0 的非交易日
+    raw = raw[raw["volume"] > 0]
+    
     return raw[["open", "high", "low", "close", "volume"]].dropna()
 
 
@@ -621,12 +620,9 @@ def scan_ticker(ticker, period="2y"):
         cond_a = last["conditionA"]
        
         # 打印触发状态
-        #print(f"{'-'*80}")
         status_str = "🔥【触发信号】" if cond_a else ""
         print(f": Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
-        #print(f"{'='*80}\n")
-        # ═══════════════════════════════════════════════════════════════
 
         return {
             "ticker"          : ticker,
@@ -648,6 +644,7 @@ def scan_ticker(ticker, period="2y"):
             "pw": None, "days": None, "since_last_gt100": None,
             "conditionA": False, "error": str(e),
         }
+
 def scan_all(period="2y"):
     tickers = [t for t, _ in WATCHLIST]
     total   = len(tickers)
@@ -655,8 +652,6 @@ def scan_all(period="2y"):
     for i, t in enumerate(tickers, 1):
         print(f"[{i}/{total}] {t}", end=" ", flush=True)
         r = scan_ticker(t, period=period)
-        tag = "🔔 conditionA" if r["conditionA"] else ("⚠ error" if r["error"] else "–")
-       # print(tag)
         results.append(r)
 
     df = pd.DataFrame(results)
@@ -707,7 +702,6 @@ def build_html(signals, scan_date, total_scanned, errors):
 <body style="margin:0;padding:0;background:#0d0d0d;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <div style="max-width:680px;margin:32px auto;background:#141414;border-radius:12px;overflow:hidden;border:1px solid #222;">
 
-    <!-- header -->
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px 32px;">
       <div style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">
         📡 GaryPOWER Signal Report
@@ -717,13 +711,11 @@ def build_html(signals, scan_date, total_scanned, errors):
       </div>
     </div>
 
-    <!-- body -->
     <div style="padding:28px 32px;">
       {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 conditionA Triggered</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
 
       {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">PW</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
 
-      <!-- legend -->
       <div style="margin-top:24px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:12px;color:#64748b;line-height:1.8;">
         <strong style="color:#94a3b8;">指标说明</strong><br>
         <span style="color:#4ade80;">Days</span> — 力度新高持续天数（&gt;100 触发）<br>
@@ -734,7 +726,6 @@ def build_html(signals, scan_date, total_scanned, errors):
       {error_section}
     </div>
 
-    <!-- footer -->
     <div style="padding:16px 32px;border-top:1px solid #1e1e1e;text-align:center;font-size:11px;color:#374151;">
       GaryPOWER · Automated by GitHub Actions
     </div>
@@ -782,8 +773,8 @@ def main():
 
     scan_date = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     print(f"\n{'═'*60}")
-    print(f"  GaryPOWER Scanner  |  {scan_date}")
-    print(f"  Period: {period}  |  Tickers: {len(WATCHLIST)}")
+    print(f"   GaryPOWER Scanner  |  {scan_date}")
+    print(f"   Period: {period}  |  Tickers: {len(WATCHLIST)}")
     print(f"{'═'*60}\n")
 
     results = scan_all(period=period)
@@ -794,12 +785,12 @@ def main():
     # ── terminal summary ─────────────────────────────────────────
     print(f"\n{'─'*60}")
     if signals:
-        print(f"  🔔 {len(signals)} conditionA signal(s):")
+        print(f"   🔔 {len(signals)} conditionA signal(s):")
         for r in signals:
             print(f"     {r['ticker']:<14} {r['name']:<20}  "
                   f"close={r['close']}  days={r['days']}  since={r['since_last_gt100']}")
     else:
-        print("  No conditionA signals today.")
+        print("   No conditionA signals today.")
     if errors:
         print(f"\n  ⚠ {len(errors)} error(s): {', '.join(e['ticker'] for e in errors)}")
     print(f"{'─'*60}\n")
