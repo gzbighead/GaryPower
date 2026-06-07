@@ -1116,7 +1116,7 @@ def calc_garypower(df):
 #  DATA FETCH (强力穿透与高精度版：确保拿到最新价，保留3位小数)
 # ═══════════════════════════════════════════════════════════════════
 
-def fetch_data(ticker, period="2y"):
+def fetch_data(ticker, period="5y"):
     import yfinance as yf
     import pandas as pd
     import numpy as np
