@@ -196,7 +196,7 @@ def scan_ticker(ticker, period="2y"):
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
         if cond_a:
-           print(f"KV 写入:")
+           print(f"KV 写入")
            save_signal_to_kv(ticker, c, d, s)
 
         return {
@@ -246,6 +246,7 @@ def save_signal_to_kv(ticker, close, days, since):
         api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
         
         if not (account_id and namespace_id and api_token):
+            print(f"KEY INVALID, RETURN")
             return
 
         date_str = datetime.now().strftime("%Y-%m-%d")
