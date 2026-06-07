@@ -1183,7 +1183,7 @@ def scan_ticker(ticker, period="2y"):
               f"Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
-        if cond_a
+        if cond_a:
            save_signal_to_kv(ticker, c, d, val_since)
 
         return {
