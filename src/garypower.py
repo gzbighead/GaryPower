@@ -1183,6 +1183,9 @@ def scan_ticker(ticker, period="2y"):
               f"Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
+        if cond_a
+           save_signal_to_kv(ticker, c, d, val_since)
+
         return {
             "ticker"          : ticker,
             "name"            : TICKER_NAMES.get(ticker, ""),
@@ -1217,8 +1220,38 @@ def scan_all(period="2y"):
     df = pd.DataFrame(results)
     df = df.sort_values(["conditionA", "days"], ascending=[False, False])
     return df
+    
+# ═══════════════════════════════════════════════════════════════════
+#  写入CLOUDFLARE KV
+# ═══════════════════════════════════════════════════════════════════
+# 1. 独立且安全的 KV 写入函数（完全独立，不影响原程序）
+def save_signal_to_kv(ticker, close, days, since):
+    try:
+        # 获取环境变量
+        account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+        namespace_id = os.environ.get("CLOUDFLARE_KV_NAMESPACE_ID")
+        api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
+        
+        if not (account_id and namespace_id and api_token):
+            return
 
-
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        key = f"signals:{date_str}:{ticker}"
+        
+        record = {
+            "date": date_str,
+            "code": ticker,
+            "price": float(close),
+            "days": int(days),
+            "since": int(since),
+            "receivedAt": datetime.now().isoformat() + "Z",
+            "source": "scanner"
+        }
+        
+        url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{namespace_id}/values/{key}"
+        requests.put(url, headers={"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}, json=record)
+    except Exception as e:
+        print(f"KV 写入跳过或失败: {e}")
 # ═══════════════════════════════════════════════════════════════════
 #  EMAIL  (Resend)
 # ═══════════════════════════════════════════════════════════════════
@@ -1275,13 +1308,6 @@ def build_html(signals, scan_date, total_scanned, errors):
       {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 conditionA Triggered</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
 
       {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">PW</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
-
-      <div style="margin-top:24px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:12px;color:#64748b;line-height:1.8;">
-        <strong style="color:#94a3b8;">指标说明</strong><br>
-        <span style="color:#4ade80;">Days</span> — 力度新高持续天数（&gt;100 触发）<br>
-        <span style="color:#60a5fa;">Since</span> — 距上次 Days&gt;100 事件的天数（前一根 &gt;100 触发）<br>
-        <span style="color:#fbbf24;">PW</span> — 力度 / |流量|
-      </div>
 
       {error_section}
     </div>
