@@ -195,8 +195,8 @@ def scan_ticker(ticker, period="2y"):
               f"Days={int(d) if not np.isnan(d) else 'NaN'}, "
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
-#        if cond_a:
-#           save_signal_to_kv(ticker, c, d, val_since)
+        if cond_a:
+           save_signal_to_kv(ticker, c, d, s)
 
         return {
             "ticker"          : ticker,
@@ -264,6 +264,7 @@ def save_signal_to_kv(ticker, close, days, since):
         requests.put(url, headers={"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}, json=record)
     except Exception as e:
         print(f"KV 写入跳过或失败: {e}")
+
 # ═══════════════════════════════════════════════════════════════════
 #  EMAIL  (Resend)
 # ═══════════════════════════════════════════════════════════════════
