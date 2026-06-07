@@ -245,7 +245,7 @@ def save_signal_to_kv(ticker, close, days, since):
         namespace_id = os.environ.get("CLOUDFLARE_KV_NAMESPACE_ID")
         api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
         
-        if not (account_id and namespace_id and api_token):
+        if not all([account_id, namespace_id, api_token]):
             print(f"KEY INVALID, RETURN")
             return
 
