@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
-
+from zoneinfo import ZoneInfo  # 必须引入这个
 
 # ═══════════════════════════════════════════════════════════════════
 #  WATCHLIST
@@ -196,7 +196,6 @@ def scan_ticker(ticker, period="2y"):
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
         if cond_a:
-           print(f"KV 写入")
            save_signal_to_kv(ticker, c, d, s)
 
         return {
@@ -251,10 +250,9 @@ def save_signal_to_kv(ticker, close, days, since):
             print(f"  Namespace ID: {bool(namespace_id)}")
             print(f"  API Token: {bool(api_token)}")
             return
-
-        date_str = datetime.now().strftime("%Y-%m-%d")
+        vancouver_tz = ZoneInfo("America/Vancouver")
+        date_str = datetime.now(vancouver_tz).strftime("%Y-%m-%d")
         key = f"signals:{date_str}:{ticker}"
-        print(f"KV key: {key}")
         
         record = {
             "date": date_str,
