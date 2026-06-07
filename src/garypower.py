@@ -246,7 +246,10 @@ def save_signal_to_kv(ticker, close, days, since):
         api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
         
         if not all([account_id, namespace_id, api_token]):
-            print(f"KEY INVALID, RETURN")
+            print(f"DEBUG - Missing Configs:")
+            print(f"  Account ID: {bool(account_id)}")
+            print(f"  Namespace ID: {bool(namespace_id)}")
+            print(f"  API Token: {bool(api_token)}")
             return
 
         date_str = datetime.now().strftime("%Y-%m-%d")
