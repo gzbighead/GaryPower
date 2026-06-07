@@ -16,7 +16,7 @@ on:
       period:
         description: "数据周期 (e.g. 2y / 1y / 6mo)"
         required: false
-        default: "2y"
+        default: "5y"
 
 jobs:
   scan:
