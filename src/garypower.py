@@ -250,6 +250,7 @@ def save_signal_to_kv(ticker, close, days, since):
 
         date_str = datetime.now().strftime("%Y-%m-%d")
         key = f"signals:{date_str}:{ticker}"
+        print(f"KV key: {key}")
         
         record = {
             "date": date_str,
