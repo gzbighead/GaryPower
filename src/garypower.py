@@ -196,6 +196,7 @@ def scan_ticker(ticker, period="2y"):
               f"Since={out['since_last_gt100'].shift(1).iloc[-1]}  {status_str}")
 
         if cond_a:
+           print(f"KV 写入:")
            save_signal_to_kv(ticker, c, d, s)
 
         return {
