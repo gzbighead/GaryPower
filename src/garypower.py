@@ -1240,7 +1240,8 @@ def save_signal_to_kv(ticker, close, days, since):
             return
 
         vancouver_tz = ZoneInfo("America/Vancouver")
-        date_str = datetime.now(vancouver_tz).strftime("%Y-%m-%d")       
+        date_str = datetime.now(vancouver_tz).strftime("%Y-%m-%d")
+        key = f"signals:{date_str}:{ticker}"
         
         record = {
             "date": date_str,
