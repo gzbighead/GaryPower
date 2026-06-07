@@ -1025,6 +1025,8 @@ WATCHLIST = [
     ("ZS", "Zscaler"),
     ("ZTS", "Zoetis"),
 ]
+# name lookup
+TICKER_NAMES = {t: n for t, n in WATCHLIST}
 
 # ═══════════════════════════════════════════════════════════════════
 #  INDICATOR CORE
@@ -1395,6 +1397,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# name lookup
-TICKER_NAMES = {t: n for t, n in WATCHLIST}
 
