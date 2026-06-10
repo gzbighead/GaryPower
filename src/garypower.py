@@ -1260,8 +1260,11 @@ def save_signal_to_kv(ticker, close, days, since):
 #  EMAIL  (Resend)
 # ═══════════════════════════════════════════════════════════════════
 
-RESEND_FROM = "messenger@ceic.ca"
-RESEND_TO   = "garyfocus@hotmail.com"
+RESEND_TO   = [
+    "garyfocus@hotmail.com",
+    "gary@ceic.ca",
+]
+RESEND_FROM = "美股选股报告 <messenger@ceic.ca>"
 
 
 def build_html(signals, scan_date, total_scanned, errors):
