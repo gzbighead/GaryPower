@@ -1339,7 +1339,7 @@ def send_email(api_key, html_body, subject):
             },
             json={
                 "from"   : RESEND_FROM,
-                "to"     : [RESEND_TO],
+                "to"     : RESEND_TO,
                 "subject": subject,
                 "html"   : html_body,
             },
