@@ -1305,15 +1305,15 @@ def build_html(signals, scan_date, total_scanned, errors):
 
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px 32px;">
       <div style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">
-        📡 GaryPOWER Signal Report
+        📡 美股选股信号
       </div>
       <div style="margin-top:6px;color:#64748b;font-size:13px;">
-        {scan_date} &nbsp;·&nbsp; {total_scanned} tickers scanned &nbsp;·&nbsp; {subject_note}
+        {scan_date} &nbsp;·&nbsp; 
       </div>
     </div>
 
     <div style="padding:28px 32px;">
-      {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 conditionA Triggered</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
+      {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 选股条件触发</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
 
       {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Days</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">PW</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
 
