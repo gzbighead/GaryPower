@@ -1265,7 +1265,7 @@ RESEND_TO   = [
     "garyfocus@hotmail.com",
     "gary@ceic.ca",
 ]
-RESEND_FROM = "美股趋势报告 <messenger@ceic.ca>"
+RESEND_FROM = "美股选股 <messenger@ceic.ca>"
 
 
 def build_html(signals, scan_date, total_scanned, errors):
