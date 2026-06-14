@@ -1001,7 +1001,7 @@ def save_signal_to_kv(ticker, close, days, since):
 RESEND_TO   = [
     "garyfocus@hotmail.com",
 ]
-RESEND_FROM = "美股-选股 <messenger@ceic.ca>"
+RESEND_FROM = "AI-选股 <messenger@ceic.ca>"
 
 
 def build_html(signals, scan_date, total_scanned, errors):
@@ -1041,7 +1041,7 @@ def build_html(signals, scan_date, total_scanned, errors):
 
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px 32px;">
       <div style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">
-        📡 美股-选股
+        📡 AI-选股
       </div>
       <div style="margin-top:6px;color:#64748b;font-size:13px;">
         {scan_date} &nbsp;·&nbsp; 
@@ -1057,12 +1057,12 @@ def build_html(signals, scan_date, total_scanned, errors):
     </div>
 
     <div style="padding:16px 32px;border-top:1px solid #1e1e1e;text-align:center;font-size:11px;color:#374151;">
-      GaryPOWER · Automated by GitHub Actions
+      Gary AI 选股 · Automated by GitHub Actions
     </div>
   </div>
 </body>
 </html>
-""", f"GaryPOWER {scan_date} | {subject_note}"
+""", f"Gary AI 选股结果 {scan_date} | {subject_note}"
 
 
 def send_email(api_key, html_body, subject):
@@ -1103,7 +1103,7 @@ def main():
 
     scan_date = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     print(f"\n{'═'*60}")
-    print(f"   GaryPOWER Scanner  |  {scan_date}")
+    print(f"   Gary AI Scanner  |  {scan_date}")
     print(f"   Period: {period}  |  Tickers: {len(WATCHLIST)}")
     print(f"{'═'*60}\n")
 
