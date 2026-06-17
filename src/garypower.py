@@ -1050,7 +1050,7 @@ def build_html(signals, scan_date, total_scanned, errors):
     </div>
 
     <div style="padding:28px 32px;">
-      {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 AI 选股结果</p>' if signals else '<p style="color:#888;font-size:15px;">No conditionA signals today.</p>'}
+      {'<p style="color:#4ade80;font-size:15px;font-weight:600;margin-bottom:16px;">🔔 AI 选股结果</p>' if signals else '<p style="color:#888;font-size:15px;">今天没有符合条件的个股.</p>'}
 
       {'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e1e1e;"><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">Ticker</th><th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:500;">名称</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Close</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">分数</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">Since</th><th style="padding:8px 12px;text-align:right;color:#64748b;font-weight:500;">量能</th></tr></thead><tbody>' + signal_rows(signals) + '</tbody></table>' if signals else ''}
 
@@ -1121,7 +1121,7 @@ def main():
             print(f"     {r['ticker']:<14} {r['name']:<20}  "
                   f"close={r['close']:<8} gp(力度)={r['gp']:<8} days={r['days']:<5} since={r['since_last_gt100']}")
     else:
-        print("   No conditionA signals today.")
+        print("   今天没有符合条件的个股.")
     if errors:
         print(f"\n  ⚠ {len(errors)} error(s): {', '.join(e['ticker'] for e in errors)}")
     print(f"{'─'*60}\n")
