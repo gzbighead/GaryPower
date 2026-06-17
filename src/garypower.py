@@ -828,7 +828,7 @@ def calc_garypower(df):
     last_gt100_bar = np.nan
 
     for idx in range(n):
-        if not np.isnan(days[idx]) and days[idx] > 100:
+        if not np.isnan(days[idx]) and days[idx] > 200:
             last_gt100_bar = bar_index[idx]
         if not np.isnan(last_gt100_bar):
             since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
