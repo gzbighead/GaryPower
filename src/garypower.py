@@ -836,7 +836,7 @@ def calc_garypower(df):
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
     # 6. 条件判断：days > 100 并且【上一根】距上次新高天数 > 100
-    condition_a = (days_series > 100) & (since_last_gt100_series.shift(1) > 100)
+    condition_a = (days_series > 200) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 组装输出
     out = df.copy()
