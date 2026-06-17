@@ -827,6 +827,7 @@ def calc_garypower(df):
     since_last_gt100 = np.full(n, np.nan)
     last_gt100_bar = np.nan
 
+    # 计算距离上次满足条件距今的天数
     for idx in range(n):
         if not np.isnan(days[idx]) and days[idx] > 200:
             last_gt100_bar = bar_index[idx]
@@ -835,7 +836,7 @@ def calc_garypower(df):
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
-    # 6. 条件判断：days > 100 并且【上一根】距上次新高天数 > 100
+    # 6. 条件判断：days > 200 并且【上一根】距上次>200天数 > 100，创200日新高，同时距离上次创200日新高的天数是100天
     condition_a = (days_series > 200) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 组装输出
