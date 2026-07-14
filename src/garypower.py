@@ -829,15 +829,15 @@ def calc_garypower(df):
 
     # 计算距离上次满足条件距今的天数
     for idx in range(n):
-        if not np.isnan(days[idx]) and days[idx] > 200:
+        if not np.isnan(days[idx]) and days[idx] > 100:
             last_gt100_bar = bar_index[idx]
         if not np.isnan(last_gt100_bar):
             since_last_gt100[idx] = bar_index[idx] - last_gt100_bar
 
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
-    # 6. 条件判断：days > 200 并且【上一根】距上次>200天数 > 100，创200日新高，同时距离上次创200日新高的天数是100天
-    condition_a = (days_series > 200) & (since_last_gt100_series.shift(1) > 100)
+    # 6. 条件判断：days > 400 并且【上一根】距上次>100天数 > 100，创400日新高，同时距离上次创100日新高的天数是100天
+    condition_a = (days_series > 400) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 组装输出
     out = df.copy()
