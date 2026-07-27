@@ -1001,7 +1001,6 @@ def save_signal_to_kv(ticker, close, days, since):
 
 RESEND_TO   = [
     "garyfocus@hotmail.com",
-    "zhyld13@gmail.com",
 ]
 RESEND_FROM = "AI-选股 <messenger@ceic.ca>"
 
