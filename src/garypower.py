@@ -1,7 +1,7 @@
 """
 GaryPOWER Signal Scanner
 Ported from Pine Script v6 by Gary
-Detects conditionA: days > 100 AND since_last_gt100[1] > 100
+Detects conditionA: days > 400 AND since_last_gt100[1] > 100
 Sends HTML email via Resend when signals are found.
 """
 
@@ -837,7 +837,7 @@ def calc_garypower(df):
     since_last_gt100_series = pd.Series(since_last_gt100, index=df.index)
 
     # 6. 条件判断：days > 400 并且【上一根】距上次>100天数 > 100，创400日新高，同时距离上次创100日新高的天数是100天
-    condition_a = (days_series > 400) & (since_last_gt100_series.shift(1) > 100)
+    condition_a = (days_series > 1000) & (since_last_gt100_series.shift(1) > 100)
 
     # 7. 组装输出
     out = df.copy()
