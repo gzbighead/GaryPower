@@ -1317,7 +1317,7 @@ def calc_garypower(df):
 #  DATA FETCH (强力穿透与高精度版：确保拿到最新价，保留3位小数)
 # ═══════════════════════════════════════════════════════════════════
 
-def fetch_data(ticker, period="2y"):
+def fetch_data(ticker, period="5y"):
     import yfinance as yf
     import pandas as pd
     import numpy as np
@@ -1328,7 +1328,7 @@ def fetch_data(ticker, period="2y"):
     # Yahoo 的服务器对 1mo/3mo 内的数据刷新率最高，能强制穿透未完全结算的最新交易日
     df_recent = t.history(period="1mo", interval="1d", auto_adjust=True, keepna=True)
     
-    # 2. 如果最新数据里没有今天，或者你想双重保险，拉取 2y 的基础历史数据
+    # 2. 如果最新数据里没有今天，或者你想双重保险，拉取 5y 的基础历史数据
     df_history = t.history(period=period, interval="1d", auto_adjust=True, keepna=True)
     
     # 3. 合并新旧账本，确保最新的一天（周五）绝对被囊括进来
@@ -1361,7 +1361,7 @@ def fetch_data(ticker, period="2y"):
 #  SCANNER
 # ═══════════════════════════════════════════════════════════════════
 
-def scan_ticker(ticker, period="2y"):
+def scan_ticker(ticker, period="5y"):
     try:
         df = fetch_data(ticker, period=period)
         out = calc_garypower(df)
@@ -1407,7 +1407,7 @@ def scan_ticker(ticker, period="2y"):
             "conditionA": False, "error": str(e),
         }
 
-def scan_all(period="2y"):
+def scan_all(period="5y"):
     tickers = [t for t, _ in WATCHLIST]
     total   = len(tickers)
     results = []
@@ -1564,7 +1564,7 @@ def send_email(api_key, html_body, subject):
 
 def main():
     api_key = os.environ.get("RESEND_KEY", "")
-    period  = os.environ.get("SCAN_PERIOD", "2y")
+    period  = os.environ.get("SCAN_PERIOD", "5y")
 
     scan_date = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
     print(f"\n{'═'*60}")
