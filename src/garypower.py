@@ -1,7 +1,7 @@
 """
 GaryPOWER Signal Scanner
 Ported from Pine Script v6 by Gary
-Detects conditionA: days > 400 AND since_last_gt100[1] > 100
+Detects conditionA: days > 1000 AND since_last_gt100[1] > 100
 Sends HTML email via Resend when signals are found.
 """
 
